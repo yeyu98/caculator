@@ -1,0 +1,179 @@
+<!--
+ * @Author: your name
+ * @Date: 2020-04-10 15:57:55
+ * @LastEditTime: 2020-04-14 15:30:53
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \源码e:\工作\计算器\index.html
+ -->
+ <!DOCTYPE html>
+ <html lang="en">
+ <head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <link rel="stylesheet" href="./css/index.css">
+   <title>计算器</title>
+ </head>
+ <body>
+   <div id="app">
+     <!-- <input type="text" id="input-box" v-model="value" readonly maxlength="10"> -->
+     <div id='input-box' v-cloak>{{value || '0'}}</div>
+ 
+     <div class="first">
+       <div class="clear btn" @click="clear">AC</div>
+       <div class="sign btn" @click="sign">+/-</div>
+       <div class="percent btn" @click="percent">%</div>
+       <div class="divide btn" @click="operator('/')">/</div>
+     </div>
+ 
+ 
+     <div class="second">
+       <div class="seven btn" @click="inputValue('7')">7</div>
+       <div class="eight btn" @click="inputValue('8')">8</div>
+       <div class="nine btn" @click="inputValue('9')">9</div>
+       <div class="multiple btn" @click="operator('*')">*</div>
+     </div>
+ 
+     <div class="third">
+       <div class="four btn" @click="inputValue('4')">4</div>
+       <div class="five btn" @click="inputValue('5')">5</div>
+       <div class="six btn" @click="inputValue('6')">6</div>
+       <div class="sub btn" @click="operator('-')">-</div>
+     </div>
+ 
+     <div class="fourth">
+       <div class="one btn" @click="inputValue('1')">1</div>
+       <div class="two btn" @click="inputValue('2')">2</div>
+       <div class="three btn" @click="inputValue('3')">3</div>
+       <div class="add btn" @click="operator('+')">+</div>
+     </div>
+ 
+     <div class="last">
+       <div class="zero btn" @click="inputValue('0')">0</div>
+       <div class="dot btn" @click="dot">.</div>
+       <div class="equal btn" @click="cacl">=</div>
+     </div>
+ 
+     <div class="history">
+       <div class="content">
+         <div class="item-wrap" v-for="(item,index) in history" :key=index v-cloak>
+           <div class="item">
+             {{item}}
+           </div>
+           <div class="use" @click='use(index)'>use</div>
+         </div>
+       </div>
+     </div>
+     
+   </div>
+ 
+   <script src="./js/vue.min.js"></script>
+   <script>
+     const app = new Vue({
+       el:'#app',
+       data:{
+         value:'',//展示的字符串
+         firstValue:'',//存储第一个输入的值数字+符号
+         secValue:'',//存储第二个输入的值数字
+         result:'',//结果值
+         history:[]//历史记录
+       },
+       methods:{
+         /* 
+         计算器功能：输入加减乘除符号直接计算结果
+                   可查询历史记录
+                   清空
+          */
+         /* 
+         待解决： 1.按符号键无法计算结果（当firstValue和secValue都有值时点击任意符号会显示计算结果）；
+                 2.第一次输入小数之后第二次输入会自动带上小数点（未对dot函数内给的第二个值输入小数点添加限制）；
+                 3.在计算出结果之后继续点击等于号会出现bug（对cacl函数增加了一层判断当firstValue和secValue同时为空时表示一次计算的结束此时）；
+                 4.历史记录功能；
+          -----  已解决  -----
+          */
+         inputValue(params) {
+           //数字
+           if(this.firstValue != ''){
+             //判断第一个值是否存在
+             //若存在则输入第二个值
+             this.secValue += params
+             this.value = this.secValue //将第二个值输出到屏幕上
+           }else {
+             this.value += params
+           }
+         },
+         operator(op) {
+           //计算符号
+           //当firstValue和secValue都有值时点击任意符号会显示计算结果
+           if(this.firstValue != ''&& this.secValue !=''){
+             this.result = eval(this.firstValue + this.secValue)//计算结果
+             this.value = this.result //结果输出
+ 
+             this.history.push(`${this.firstValue}${this.secValue}=${this.result}`)//保留历史记录
+             this.firstValue = this.value + op
+             this.secValue = ''  
+           }else{
+             this.firstValue = this.value + op
+           }
+         },
+         cacl() {
+           //计算结果
+           if(this.value === ''|| this.value === '0'){
+             //初始时只有0时无论点击多少次等号结果都为0
+             this.value = ''
+             this.result = ''
+           }else if(this.result != '' && this.firstValue === '' && this.secValue === ''){
+             //表示一次计算的结束此时无论点击多少次等号显示的都是这次计算的结果
+             this.value = this.result
+           }else{
+             this.result = eval(this.firstValue + this.secValue) 
+             this.value = this.result 
+ 
+             this.history.push(`${this.firstValue}${this.secValue}=${this.result}`)//保留历史记录
+             this.firstValue = '' //第一个为空
+             this.secValue = ''  //第二个依然为空
+           }
+ 
+         },
+         dot() {
+           //点号
+           this.value =  this.value.indexOf('.') !=-1 ? this.value : this.value + '.'//123 -1
+           if(this.secValue != ''){
+             //只有当第二个值输入之后才可以进行点号操作
+             this.secValue = this.secValue.indexOf('.') !=-1 ?  this.secValue : this.secValue + '.' 
+           }
+         },
+         clear() {
+           //清空
+           this.value = ''
+           this.firstValue = ''
+           this.secValue = ''
+         },
+         sign() {
+           //正负号替换
+           this.value = parseFloat(this.value) < 0 ? this.value:-this.value
+           if(this.secValue != ''){
+            this.secValue = parseFloat(this.secValue) < 0 ? this.secValue:-this.secValue
+           }
+         },
+         percent() {
+           //将数字转换成百分比
+           this.value = parseFloat(this.value)/100 +''
+           if(this.secValue != ''){
+           this.secValue = parseFloat(this.secValue)/100 +''
+           }
+         },
+         use(i) {
+           //点击use之后result的值为use的值且first和sec都为空
+           this.result = this.history[i].split('=')[1]
+           this.value = this.result
+         }
+       }
+ 
+ 
+     })
+   </script>
+ 
+   
+ </body>
+ </html>
